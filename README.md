@@ -6,6 +6,14 @@
 
 It combines **multiple passive and active intelligence sources**, enforces **mandatory proxy usage**, normalizes all data into a shared schema, correlates infrastructure relationships, and exports clean, structured intelligence in many formats.
 
+**Key Features:**
+- **16+ Intelligence Modules**: Including 11 free modules that require no API keys
+- **Comprehensive DNS Analysis**: Full record types, email security (SPF/DMARC/DKIM), reverse DNS
+- **IP Intelligence**: Geolocation, ASN data, reverse DNS lookups
+- **Web Security Analysis**: HTTP security headers, robots.txt parsing, favicon technology detection
+- **Domain Intelligence**: WHOIS data, domain age analysis, registration information
+- **Privacy-First Design**: Proxy enforcement, no direct connections, passive-first approach
+
 ## Installation
 
 ### From Source
@@ -16,55 +24,77 @@ cd mangosint
 pip install -e .
 ```
 
+### Platform-Specific Usage
+
+**Linux/macOS:**
+```bash
+./mangosint.sh --help
+```
+
+**Windows:**
+```cmd
+mangosint.bat --help
+```
+
+**Or use Python directly (all platforms):**
+```bash
+python -m mangosint.cli --help
+```
+
 ### Dependencies
 
 ```bash
 pip install typer rich pydantic httpx aiofiles python-dotenv loguru tqdm
 ```
 
-### Quick Test
-
-```bash
-./mangosint.sh --help
-```
-
 ## Quick Start
 
 ```bash
 # Initialize configuration
-./mangosint.sh init
+mangosint init
 
 # Scan a domain
-./mangosint.sh scan example.com
+mangosint scan example.com
 
 # Scan with specific options
-./mangosint.sh scan example.com --deep --output json
+mangosint scan example.com --deep --output json
 
 # Scan multiple targets
-./mangosint.sh scan targets.txt
+mangosint scan targets.txt
 
 # Check status
-./mangosint.sh status network
-./mangosint.sh status proxies
-./mangosint.sh status modules
+mangosint status network
+mangosint status proxies
+mangosint status modules
 
 # List available sources
-./mangosint.sh list-sources
+mangosint list-sources
 ```
+
+**Note**: On Windows, use `mangosint.bat` instead of `mangosint`, or use `python -m mangosint.cli` on any platform.
 
 ## Configuration
 
 On first run, mangosint will prompt you to configure proxy settings for safety.
 
-Configuration is stored in `~/.mangosint/config.json`.
+Configuration is stored in:
+- **Linux/macOS**: `~/.mangosint/config.json`
+- **Windows**: `%USERPROFILE%\.mangosint\config.json`
 
 ### Quick Setup
 
 Copy the example configuration and customize it:
 
+**Linux/macOS:**
 ```bash
 cp config.example.json ~/.mangosint/config.json
 # Edit ~/.mangosint/config.json with your API keys and proxy settings
+```
+
+**Windows:**
+```cmd
+copy config.example.json %USERPROFILE%\.mangosint\config.json
+# Edit %USERPROFILE%\.mangosint\config.json with your API keys and proxy settings
 ```
 
 ### API Keys
@@ -97,7 +127,12 @@ Many modules require API keys for external services. Configure them in your conf
 ### ✅ Implemented
 
 - **Privacy by Default**: Proxy enforcement, DNS over proxy, IPv6 disabled
-- **Modular Architecture**: 16+ intelligence modules
+- **Modular Architecture**: 16+ intelligence modules (11 free, 5 API-based)
+- **Free Intelligence Sources**: DNS records, reverse DNS, IP geolocation, security headers, robots.txt, favicon analysis, domain age
+- **Comprehensive DNS Analysis**: All record types (A, AAAA, MX, TXT, NS, SOA, SRV), email security records (SPF/DMARC/DKIM)
+- **IP Intelligence**: Geolocation from free services, ASN/BGP data, reverse DNS lookups
+- **Web Security Analysis**: HTTP security headers with recommendations, robots.txt parsing, favicon-based technology detection
+- **Domain Intelligence**: WHOIS data, domain age analysis, registration risk assessment
 - **Input Processing**: Single targets, batch files, URL normalization
 - **Output Formats**: JSON, TXT, CSV, HTML, SQLite
 - **Export Formats**: GraphML, Mermaid
@@ -120,14 +155,17 @@ Many modules require API keys for external services. Configure them in your conf
 
 | Module | Description | Permissions | API Required | Key Attributes Provided |
 |--------|-------------|-------------|--------------|-------------------------|
-| **dns** | DNS resolution and lookup | network | No | **IPs**, hostnames, DNS records |
+| **dns** | DNS resolution and comprehensive record lookup | network | No | **IPs**, DNS records, mail servers, SPF/DMARC/DKIM |
+| **rdns** | Reverse DNS (PTR) record lookup | network | No | **Reverse DNS** hostnames |
+| **geoip** | IP geolocation and location intelligence | network | No | **Geolocation**, country, city, ISP |
 | **crtsh** | Certificate Transparency logs from crt.sh | network | No | **Certificates**, **subdomains**, issuer info |
-| **censys** | Censys internet-wide scanning data | network, api | Yes | **Ports**, **services**, **technologies** |
-| **shodan** | Shodan internet-wide scanning data | network, api | Yes | **Ports**, **services**, **technologies**, banners |
 | **whois** | Whois domain registration information | network | No | **Organization**, registration dates, registrar |
-| **virustotal** | VirusTotal domain and IP analysis | network, api | Yes | **Subdomains**, security analysis, malware detection |
 | **asn** | ASN and BGP information lookup | network | No | **ASN**, **organization**, **ISP**, **country**, **city** |
 | **http** | HTTP headers and metadata analysis | network, active | No | **Technologies**, server headers, redirects |
+| **security** | HTTP security headers and configuration analysis | network, active | No | Security headers, **security analysis**, recommendations |
+| **robots** | Robots.txt analysis and crawler directives | network, active | No | Crawler directives, sitemaps, user agents |
+| **favicon** | Favicon analysis and technology fingerprinting | network, active | No | **Technologies** via favicon hashing |
+| **domainage** | Domain age and registration information | network | No | Domain age, registration info, risk assessment |
 | **ports** | Advanced port scanning with protocol detection | network, active | No | **Ports**, **services**, service versions, banners |
 | **alienvault** | AlienVault Open Threat Exchange intelligence | network, api | Yes | **IPs**, threat intelligence, malware indicators |
 | **certspotter** | CertSpotter certificate transparency monitoring | network, api | Yes | **Certificates**, **subdomains**, certificate metadata |
@@ -135,6 +173,9 @@ Many modules require API keys for external services. Configure them in your conf
 | **hunter** | Hunter.io email discovery | network, api | Yes | **Emails**, email patterns |
 | **hibp** | HaveIBeenPwned breach data | network, api | Optional | **Breaches**, compromised data |
 | **greynoise** | GreyNoise IP context and scanner intelligence | network, api | Optional | **IP context**, scanner classification |
+| **censys** | Censys internet-wide scanning data | network, api | Yes | **Ports**, **services**, **technologies** |
+| **shodan** | Shodan internet-wide scanning data | network, api | Yes | **Ports**, **services**, **technologies**, banners |
+| **virustotal** | VirusTotal domain and IP analysis | network, api | Yes | **Subdomains**, security analysis, malware detection |
 
 ## Intelligence Attributes
 
@@ -175,12 +216,47 @@ mangosint collects and correlates the following intelligence attributes:
 - Autonomous System Numbers
 - Organization and ISP information
 - Geographic location data (country, city)
-- **Sources**: `asn`, `whois` (with `--deep`)
+- **Sources**: `asn`, `whois`, `geoip` (with `--deep`)
 
-### � **Emails** (`emails`)
-- Discovered email addresses associated with domains
-- Email patterns and contact information
-- **Sources**: `hunter`
+### 📧 **DNS Records** (`dns_records`)
+- Comprehensive DNS record types (A, AAAA, MX, TXT, NS, SOA, SRV)
+- Mail server configurations and email security records
+- **Sources**: `dns`
+
+### 🔐 **Email Security** (`spf_records`, `dmarc_records`, `dkim_records`)
+- SPF, DMARC, and DKIM email security configurations
+- Email authentication and anti-spoofing analysis
+- **Sources**: `dns`
+
+### 🔄 **Reverse DNS** (`reverse_dns`)
+- PTR record lookups for IP-to-hostname resolution
+- Hostname discovery from IP addresses
+- **Sources**: `rdns`
+
+### 🌍 **Geolocation** (`geolocation`)
+- IP address geographic location data
+- Country, city, ISP, and network information
+- **Sources**: `geoip`, `asn`
+
+### 🛡️ **Security Analysis** (`security_analysis`)
+- HTTP security header analysis and recommendations
+- Security configuration scoring and risk assessment
+- **Sources**: `security`
+
+### 🤖 **Crawler Directives** (`robots_txt`)
+- Robots.txt parsing and analysis
+- Crawler permissions and sitemap discovery
+- **Sources**: `robots`
+
+### 🎨 **Favicon Analysis** (`favicon`)
+- Technology fingerprinting via favicon hashing
+- Framework and CMS detection through favicon analysis
+- **Sources**: `favicon`
+
+### 📅 **Domain Information** (`domain_info`)
+- Domain registration dates and age analysis
+- Registrar information and risk assessment
+- **Sources**: `domainage`
 
 ### 🔓 **Security Breaches** (`breaches`)
 - Data breaches affecting the target domain
@@ -219,24 +295,32 @@ mangosint collects and correlates the following intelligence attributes:
 
 ## Module Intelligence Matrix
 
-| Attribute | dns | crtsh | censys | shodan | whois | virustotal | asn | http | ports | alienvault | certspotter | urlscan | hunter | hibp | greynoise |
-|-----------|-----|-------|--------|--------|-------|------------|-----|------|-------|------------|------------|-------------|---------|--------|------|
-| **IPs** | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| **Subdomains** | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Certificates** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Ports** | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Services** | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Technologies** | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| **ASN/Org** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Location** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Emails** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| **Breaches** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| **Security Headers** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| **Service Banners** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **IP Context** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Categories/Tags** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Reputation** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Threat Intel** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Attribute | dns | rdns | geoip | crtsh | whois | asn | http | security | robots | favicon | domainage | ports | alienvault | certspotter | urlscan | hunter | hibp | greynoise | censys | shodan | virustotal |
+|-----------|-----|------|-------|-------|-------|-----|------|----------|--------|---------|-----------|-------|------------|------------|-------------|---------|--------|------|--------|--------|------------|
+| **IPs** | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **Subdomains** | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
+| **Certificates** | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **Ports** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
+| **Services** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
+| **Technologies** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
+| **ASN/Org** | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Location** | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **DNS Records** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Email Security** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Reverse DNS** | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Geolocation** | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Security Analysis** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Robots.txt** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Favicon** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Domain Info** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Emails** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Breaches** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Security Headers** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Service Banners** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **IP Context** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **Categories/Tags** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Reputation** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Threat Intel** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ## Intelligence Gathering Workflow
 
@@ -257,10 +341,17 @@ mangosint scan example.com --deep --output json
 
 **What you get:**
 - **DNS Resolution**: All IP addresses for the domain
+- **Comprehensive DNS Records**: A, AAAA, MX, TXT, NS, SOA, SRV records
+- **Email Security**: SPF, DMARC, DKIM configurations and analysis
+- **Reverse DNS**: PTR record lookups for IP-to-hostname resolution
+- **IP Geolocation**: Geographic location, ISP, and network information
 - **Certificate Intelligence**: SSL certificates from transparency logs
 - **Subdomain Discovery**: Related subdomains from certificates
 - **ASN Intelligence**: BGP routing, organization, and location data
-- **Whois Data**: Domain registration information
+- **Whois Data**: Domain registration information and age analysis
+- **Security Headers**: HTTP security analysis with recommendations
+- **Web Crawler Analysis**: Robots.txt parsing and sitemap discovery
+- **Technology Fingerprinting**: Favicon-based framework and CMS detection
 - **Advanced Port Scanning**: Real TCP port scanning with protocol detection and service banners
 - **Technology Detection**: Web frameworks, server software, and middleware
 - **Threat Intelligence**: VirusTotal analysis, AlienVault pulses, GreyNoise context

@@ -13,9 +13,21 @@ class OutputFormatter:
     def __init__(self, results: Dict[str, Any]):
         self.results = results
 
+    def _clean_empty_values(self, obj: Any) -> Any:
+        """Recursively remove empty values from dict/list structures"""
+        if isinstance(obj, dict):
+            return {k: self._clean_empty_values(v) for k, v in obj.items() 
+                   if v is not None and v != "" and v != [] and v != {}}
+        elif isinstance(obj, list):
+            cleaned_list = [self._clean_empty_values(item) for item in obj]
+            return [item for item in cleaned_list if item is not None and item != "" and item != [] and item != {}]
+        else:
+            return obj
+
     def to_json(self) -> str:
         """Output as JSON"""
-        return json.dumps(self.results, indent=2, default=str)
+        cleaned_results = self._clean_empty_values(self.results)
+        return json.dumps(cleaned_results, indent=2, default=str)
 
     def to_txt(self) -> str:
         """Output as human-readable text"""
@@ -181,15 +193,18 @@ class OutputFormatter:
         )
         entity_id = cursor.lastrowid
 
-        attributes = self.results.get("attributes", {})
-        for attr_type, values in attributes.items():
+        # Clean attributes before inserting
+        cleaned_attributes = self._clean_empty_values(self.results.get("attributes", {}))
+        
+        for attr_type, values in cleaned_attributes.items():
             if isinstance(values, list):
                 for value in values:
-                    conn.execute(
-                        "INSERT INTO attributes (entity_id, attr_type, value) VALUES (?, ?, ?)",
-                        (entity_id, attr_type, str(value))
-                    )
-            else:
+                    if value is not None and value != "" and value != [] and value != {}:
+                        conn.execute(
+                            "INSERT INTO attributes (entity_id, attr_type, value) VALUES (?, ?, ?)",
+                            (entity_id, attr_type, str(value))
+                        )
+            elif values is not None and values != "" and values != [] and values != {}:
                 conn.execute(
                     "INSERT INTO attributes (entity_id, attr_type, value) VALUES (?, ?, ?)",
                     (entity_id, attr_type, str(values))

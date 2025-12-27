@@ -13,11 +13,17 @@ from mangosint.modules.censys import CensysModule
 from mangosint.modules.certspotter import CertSpotterModule
 from mangosint.modules.crtsh import CRTModule
 from mangosint.modules.dns import DNSModule
+from mangosint.modules.domainage import DomainAgeModule
+from mangosint.modules.favicon import FaviconModule
+from mangosint.modules.geoip import IPGeolocationModule
 from mangosint.modules.greynoise import GreyNoiseModule
 from mangosint.modules.hibp import HIBPModule
 from mangosint.modules.http import HTTPModule
 from mangosint.modules.hunter import HunterModule
 from mangosint.modules.ports import PortScanModule
+from mangosint.modules.rdns import ReverseDNSModule
+from mangosint.modules.robots import RobotsModule
+from mangosint.modules.security import HTTPSecurityModule
 from mangosint.modules.shodan import ShodanModule
 from mangosint.modules.urlscan import URLScanModule
 from mangosint.modules.virustotal import VirusTotalModule
@@ -33,13 +39,19 @@ class Scanner:
         self.correlation_engine = CorrelationEngine()
         self.modules = [
             DNSModule(config, self.network_client),
+            ReverseDNSModule(config, self.network_client),
+            IPGeolocationModule(config, self.network_client),
             CRTModule(config, self.network_client),
             CensysModule(config, self.network_client),
             ShodanModule(config, self.network_client),
             WhoisModule(config, self.network_client),
+            DomainAgeModule(config, self.network_client),
             VirusTotalModule(config, self.network_client),
             ASNModule(config, self.network_client),
             HTTPModule(config, self.network_client),
+            HTTPSecurityModule(config, self.network_client),
+            RobotsModule(config, self.network_client),
+            FaviconModule(config, self.network_client),
             PortScanModule(config, self.network_client),
             AlienVaultModule(config, self.network_client),
             CertSpotterModule(config, self.network_client),
@@ -127,6 +139,18 @@ class Scanner:
                 "threat_tags": [],
                 "validation": None,
                 "service_banners": {},
+                "dns_records": {},
+                "mail_servers": [],
+                "spf_records": [],
+                "dmarc_records": [],
+                "dkim_records": [],
+                "reverse_dns": {},
+                "geolocation": {},
+                "security_analysis": {},
+                "robots_txt": {},
+                "favicon": {},
+                "domain_info": {},
+                "risk_assessment": None,
             },
             "sources": [],
             "errors": {},
@@ -192,6 +216,79 @@ class Scanner:
                     aggregated["attributes"]["breaches"].extend(value)
                 elif key == "security_headers" and value:
                     aggregated["attributes"]["security_headers"].extend(value)
+                elif key == "security_analysis" and value:
+                    if "security_analysis" not in aggregated["attributes"]:
+                        aggregated["attributes"]["security_analysis"] = value
+                    else:
+                        # Merge security analysis
+                        for k, v in value.items():
+                            if k == "security_score":
+                                aggregated["attributes"]["security_analysis"][k] = max(
+                                    aggregated["attributes"]["security_analysis"].get(k, 0), v
+                                )
+                            elif k in ["missing_headers", "present_headers", "recommendations", "issues"]:
+                                if k not in aggregated["attributes"]["security_analysis"]:
+                                    aggregated["attributes"]["security_analysis"][k] = v
+                                else:
+                                    aggregated["attributes"]["security_analysis"][k].extend(v)
+                                    aggregated["attributes"]["security_analysis"][k] = list(set(aggregated["attributes"]["security_analysis"][k]))
+                elif key == "robots_txt" and value:
+                    if "robots_txt" not in aggregated["attributes"]:
+                        aggregated["attributes"]["robots_txt"] = value
+                elif key == "favicon" and value:
+                    if "favicon" not in aggregated["attributes"]:
+                        aggregated["attributes"]["favicon"] = value
+                elif key == "domain_info" and value:
+                    if not aggregated["attributes"]["domain_info"]:
+                        aggregated["attributes"]["domain_info"] = value
+                elif key == "risk_assessment" and value:
+                    if not aggregated["attributes"]["risk_assessment"]:
+                        aggregated["attributes"]["risk_assessment"] = value
+                elif key == "dns_records" and value:
+                    if "dns_records" not in aggregated["attributes"]:
+                        aggregated["attributes"]["dns_records"] = value
+                    else:
+                        # Merge DNS records
+                        for record_type, records in value.items():
+                            if record_type not in aggregated["attributes"]["dns_records"]:
+                                aggregated["attributes"]["dns_records"][record_type] = records
+                            else:
+                                aggregated["attributes"]["dns_records"][record_type].extend(records)
+                                aggregated["attributes"]["dns_records"][record_type] = list(set(aggregated["attributes"]["dns_records"][record_type]))
+                elif key == "mail_servers" and value:
+                    if "mail_servers" not in aggregated["attributes"]:
+                        aggregated["attributes"]["mail_servers"] = value
+                    else:
+                        aggregated["attributes"]["mail_servers"].extend(value)
+                        aggregated["attributes"]["mail_servers"] = list(set(aggregated["attributes"]["mail_servers"]))
+                elif key == "spf_records" and value:
+                    if "spf_records" not in aggregated["attributes"]:
+                        aggregated["attributes"]["spf_records"] = value
+                    else:
+                        aggregated["attributes"]["spf_records"].extend(value)
+                        aggregated["attributes"]["spf_records"] = list(set(aggregated["attributes"]["spf_records"]))
+                elif key == "dmarc_records" and value:
+                    if "dmarc_records" not in aggregated["attributes"]:
+                        aggregated["attributes"]["dmarc_records"] = value
+                    else:
+                        aggregated["attributes"]["dmarc_records"].extend(value)
+                        aggregated["attributes"]["dmarc_records"] = list(set(aggregated["attributes"]["dmarc_records"]))
+                elif key == "dkim_records" and value:
+                    if "dkim_records" not in aggregated["attributes"]:
+                        aggregated["attributes"]["dkim_records"] = value
+                    else:
+                        aggregated["attributes"]["dkim_records"].extend(value)
+                        aggregated["attributes"]["dkim_records"] = list(set(aggregated["attributes"]["dkim_records"]))
+                elif key == "reverse_dns" and value:
+                    if "reverse_dns" not in aggregated["attributes"]:
+                        aggregated["attributes"]["reverse_dns"] = value
+                    else:
+                        aggregated["attributes"]["reverse_dns"].update(value)
+                elif key == "geolocation" and value:
+                    if "geolocation" not in aggregated["attributes"]:
+                        aggregated["attributes"]["geolocation"] = value
+                    else:
+                        aggregated["attributes"]["geolocation"].update(value)
                 elif key == "technologies" and value:
                     aggregated["attributes"]["technologies"].extend(value)
                 elif key == "ip_context" and value:

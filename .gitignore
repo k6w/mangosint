@@ -144,6 +144,18 @@ dmypy.json
 ehthumbs.db
 Thumbs.db
 
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
 # Project specific
 # User configuration files (may contain API keys)
 config.json
