@@ -1,4 +1,4 @@
-# 🍋 mangosint
+> # 🥭 mangosint
 
 ## Privacy-First Modular OSINT & Infrastructure Intelligence Framework
 
