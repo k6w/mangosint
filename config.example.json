@@ -1,0 +1,31 @@
+{
+  "network": {
+    "mode": "passive",
+    "force_proxy": true,
+    "dns_over_proxy": true,
+    "ipv6": false
+  },
+  "proxy": {
+    "type": "socks5",
+    "host": "127.0.0.1",
+    "port": 9050
+  },
+  "proxy_pool": {
+    "enabled": true,
+    "rotation": "per-request",
+    "sources": ["github:proxifly"]
+  },
+  "api": {
+    "censys_api_key": null,
+    "shodan_api_key": null,
+    "virustotal_api_key": null,
+    "alienvault_api_key": null,
+    "certspotter_api_key": null,
+    "sslmate_api_key": null,
+    "urlscan_api_key": null,
+    "hunter_api_key": null,
+    "hibp_api_key": null,
+    "greynoise_api_key": null
+  },
+  "threads": 10
+}
